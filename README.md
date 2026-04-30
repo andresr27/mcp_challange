@@ -68,13 +68,25 @@ Deploy as a monorepo subdirectory project so Vercel builds only the Next.js app.
 
 ## Test Vercel deployment
 
-Use the public domain checks after each deployment.
+Run these checks after every production deploy to confirm:
+
+- the custom domain is serving the latest build
+- MCP connectivity is healthy
+- verification smoke tests pass
+- chat streaming still works end-to-end
 
 ```bash
 cd app
 npm run test:smoke:vercel
 npm run test:post-deploy:vercel
 ```
+
+### Troubleshooting (Vercel tests)
+
+- **`404: NOT_FOUND` on domain:** verify Vercel Domain settings and ensure `support.wido.uy` points to the current production deployment.
+- **`app/app` path error in Vercel:** keep Vercel Root Directory set to `app` and run deploy from repo root.
+- **Smoke tests using localhost by mistake:** use `test:post-deploy:vercel` (already pinned to `https://support.wido.uy`) or set `BASE_URL` explicitly.
+- **`/api/chat` fails after tool success:** check provider env vars and redeploy; OpenRouter model path requires valid `OPENROUTER_API_KEY`.
 
 `test:post-deploy:vercel` is pinned to `https://support.wido.uy` and includes:
 
@@ -99,6 +111,19 @@ Security and behavior guardrails are codified in `AGENTS.md` and implemented in 
 
 LangSmith tracing is supported via environment variables and records request-level chain runs, tool activity summaries, and completion metadata.
 
+What you need for reliable observability:
+
+- `LANGSMITH_TRACING=true` to enable tracing
+- a valid `LANGSMITH_API_KEY`
+- a stable `LANGSMITH_PROJECT` name (e.g. `meridian-support`)
+- traffic through `/api/chat` (traces are created per chat request)
+
+How to validate quickly:
+
+1. Send a chat request from UI or API.
+2. Open LangSmith and verify a new run named `meridian-chat-request`.
+3. Confirm metadata includes request/tool lifecycle information.
+
 Recommended variables in `app/.env.local` (and Vercel):
 
 ```bash
@@ -115,6 +140,13 @@ Fallback provider keys are also supported:
 GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
 GOOGLE_API_KEY=your_google_key
 ```
+
+### Troubleshooting (LangSmith)
+
+- **No traces appear:** confirm `LANGSMITH_TRACING=true` and restart/redeploy so env vars are reloaded.
+- **Auth errors in logs:** verify `LANGSMITH_API_KEY` is valid and available in the same environment as `/api/chat`.
+- **Wrong project/run grouping:** set `LANGSMITH_PROJECT=meridian-support` consistently across local and Vercel.
+- **Tracing works locally but not in Vercel:** ensure all LangSmith env vars are set in Vercel Project Settings (Production + Preview as needed).
 
 ## Screenshots
 
