@@ -11,6 +11,8 @@ import {
   createMeridianToolSet,
   hasVerifiedCustomerInHistory,
 } from "@/lib/meridian-tools";
+import { createLogger } from "@/lib/logger";
+import { startLangSmithTrace } from "@/lib/langsmith";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -56,9 +58,13 @@ function getGoogleModel() {
 }
 
 export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+  const logger = createLogger({ requestId, route: "/api/chat" });
+
   try {
     const body = (await request.json()) as ChatRequest;
     const messages = Array.isArray(body.messages) ? body.messages : [];
+    logger.info("chat.request.received", { messageCount: messages.length });
 
     let isVerified = hasVerifiedCustomerInHistory(messages);
     const failedVerificationAttempts = countFailedVerificationAttempts(messages);
@@ -67,10 +73,37 @@ export async function POST(request: Request) {
         ? "The customer has already failed verification 3 times. Suggest phone support at 1-800-MERIDIAN before attempting another sensitive action."
         : "";
 
+    const trace = await startLangSmithTrace({
+      name: "meridian-chat-request",
+      requestId,
+      input: {
+        messageCount: messages.length,
+        failedVerificationAttempts,
+      },
+      metadata: {
+        route: "/api/chat",
+      },
+    });
+
     const { tools, restrictedToolNames } = await createMeridianToolSet({
       isVerified: () => isVerified,
       markVerified: () => {
         isVerified = true;
+        logger.info("chat.verification.state_changed", { isVerified: true });
+      },
+      onToolStart: ({ toolName, restricted }) => {
+        logger.info("tool.call.start", {
+          toolName,
+          restricted,
+        });
+      },
+      onToolFinish: ({ toolName, isError, code, durationMs }) => {
+        logger.info("tool.call.finish", {
+          toolName,
+          isError,
+          code,
+          durationMs,
+        });
       },
     });
 
@@ -88,14 +121,43 @@ export async function POST(request: Request) {
       tools,
       activeTools,
       stopWhen: stepCountIs(8),
+      onFinish: async ({ finishReason, steps }) => {
+        const toolCalls = steps.flatMap((step) => step.toolCalls ?? []);
+        const toolResults = steps.flatMap((step) => step.toolResults ?? []);
+        logger.info("chat.stream.finish", {
+          finishReason,
+          stepCount: steps.length,
+          toolCallCount: toolCalls.length,
+          toolResultCount: toolResults.length,
+          verifiedAtEnd: isVerified,
+        });
+
+        await trace.finish({
+          output: {
+            finishReason,
+            stepCount: steps.length,
+            toolCallCount: toolCalls.length,
+            toolResultCount: toolResults.length,
+          },
+          metadata: {
+            verifiedAtEnd: isVerified,
+          },
+        });
+      },
     });
 
     return result.toUIMessageStreamResponse({
       onError: () => {
+        logger.error("chat.stream.error", {
+          message:
+            "I'm having trouble reaching our inventory database. Please try again in a moment.",
+        });
         return "I'm having trouble reaching our inventory database. Please try again in a moment.";
       },
     });
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    logger.error("chat.request.failed", { message });
     return Response.json(
       {
         ok: false,

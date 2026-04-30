@@ -1,1 +1,3 @@
 .aider*
+.vercel
+.env*.local

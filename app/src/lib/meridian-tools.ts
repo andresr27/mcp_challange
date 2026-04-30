@@ -12,6 +12,17 @@ const RESTRICTED_TOOLS = new Set([
 type VerificationState = {
   isVerified: () => boolean;
   markVerified: () => void;
+  onToolStart?: (payload: {
+    toolName: string;
+    input: unknown;
+    restricted: boolean;
+  }) => void;
+  onToolFinish?: (payload: {
+    toolName: string;
+    isError: boolean;
+    code?: string;
+    durationMs: number;
+  }) => void;
 };
 
 type NormalizedMcpResult = {
@@ -146,8 +157,15 @@ export async function createMeridianToolSet(state: VerificationState) {
         (mcpTool.inputSchema ?? { type: "object" }) as Record<string, unknown>,
       ),
       execute: async (input) => {
+        const startedAt = Date.now();
+        state.onToolStart?.({
+          toolName,
+          input,
+          restricted: RESTRICTED_TOOLS.has(toolName),
+        });
+
         if (RESTRICTED_TOOLS.has(toolName) && !state.isVerified()) {
-          return {
+          const response = {
             isError: true,
             code: "AUTH_REQUIRED",
             userMessage:
@@ -155,6 +173,13 @@ export async function createMeridianToolSet(state: VerificationState) {
             text: "",
             structured: null,
           };
+          state.onToolFinish?.({
+            toolName,
+            isError: true,
+            code: "AUTH_REQUIRED",
+            durationMs: Date.now() - startedAt,
+          });
+          return response;
         }
 
         try {
@@ -166,10 +191,17 @@ export async function createMeridianToolSet(state: VerificationState) {
 
           if (result?.isError) {
             const mappedError = mapToolError(toolName, result.text ?? "");
-            return {
+            const response = {
               ...result,
               ...mappedError,
             };
+            state.onToolFinish?.({
+              toolName,
+              isError: true,
+              code: mappedError.code,
+              durationMs: Date.now() - startedAt,
+            });
+            return response;
           }
 
           if (
@@ -179,21 +211,35 @@ export async function createMeridianToolSet(state: VerificationState) {
             state.markVerified();
           }
 
-          return {
+          const response = {
             ...result,
             code: "OK",
             retryable: false,
           };
+          state.onToolFinish?.({
+            toolName,
+            isError: false,
+            code: "OK",
+            durationMs: Date.now() - startedAt,
+          });
+          return response;
         } catch (error) {
           const technicalMessage = extractErrorText(error);
           const mappedError = mapToolError(toolName, technicalMessage);
 
-          return {
+          const response = {
             isError: true,
             text: technicalMessage,
             structured: null,
             ...mappedError,
           };
+          state.onToolFinish?.({
+            toolName,
+            isError: true,
+            code: mappedError.code,
+            durationMs: Date.now() - startedAt,
+          });
+          return response;
         }
       },
     });

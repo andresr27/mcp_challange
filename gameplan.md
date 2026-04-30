@@ -25,3 +25,10 @@
 - **Vercel Deployment:** Push to production, configure environment variables, and verify the live URL.
 - **Documentation:** Finalize `README.md` and `AGENTS.md`.
 
+#### Phase 5: Reliability, Domain, and Observability (Minutes 180–240)
+
+- **Vercel Smoke Tests:** Run post-deploy smoke tests against the production URL (`/api/mcp` + `/api/test/verify-pin`) and fail rollout if any critical check fails.
+- **Structured Logging:** Implement JSON structured logs for chat requests, MCP tool calls, verification outcomes, and error categories (with request IDs and timestamps).
+- **Custom Domain Setup:** Configure and validate `support.wido.uy` in Vercel (DNS records, SSL certificate, and production alias verification).
+- **LangSmith Observability:** Add LangSmith tracing for request lifecycle, model calls, tool invocations, and latency/error metrics with environment-based toggles.
+
