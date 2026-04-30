@@ -14,7 +14,7 @@
     "test:smoke:vercel:auto": "node scripts/smoke-tests.mjs",
     "test:post-deploy": "node scripts/post-deploy-checks.mjs",
     "test:post-deploy:local": "node scripts/post-deploy-checks.mjs --baseUrl http://localhost:3000",
-    "test:post-deploy:vercel": "node scripts/post-deploy-checks.mjs"
+    "test:post-deploy:vercel": "node scripts/post-deploy-checks.mjs --baseUrl https://support.wido.uy"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.65",

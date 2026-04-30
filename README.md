@@ -1,25 +1,40 @@
 # Meridian Electronics MCP Chatbot
 
-Meridian Support chatbot built with Next.js, Vercel AI SDK, Google Gemini, and an `order-mcp` backend.
+Production-ready support chatbot for Meridian Electronics, built with Next.js + AI SDK and powered by `order-mcp`.
 
-## Project structure
+## Problem
 
-- `app/`: production Next.js application (UI + API routes)
-- `src/`: early prototype scripts and experiments
-- `gameplan.md`: implementation plan (Phases 1-4)
-- `AGENTS.md`: behavior and security guardrails
+Customer support teams need fast, consistent answers for product discovery, identity verification, and order operations without exposing sensitive customer data.
 
-## Current status
+## Solution
 
-All planned phases are implemented in `app/`:
+This project delivers a secure chat assistant that discovers MCP tools dynamically, enforces verification-first access for sensitive actions, and streams clear responses to end users.
 
-- **Phase 1:** MCP connectivity and tool introspection
-- **Phase 2:** Dynamic MCP tool mapping + auth-first tool gating
-- **Phase 3:** Chat UI (`ChatContainer`, `MessageBubble`, `OrderCard`)
-- **Phase 4:** Error hardening, deployment docs, and deterministic smoke tests
-- **Phase 5:** Post-deploy checks, structured logging, custom domain runbook, and LangSmith observability
+## MCP tools used
 
-## Run locally
+The assistant connects to `order-mcp` and uses these core tools:
+
+- `list_products`, `get_product`, `search_products`
+- `verify_customer_pin`
+- `get_customer`, `list_orders`, `get_order`, `create_order`
+
+Supporting API routes:
+
+- `GET /api/mcp` for MCP health/tool introspection
+- `POST /api/chat` for streaming chat orchestration
+- `POST /api/test/verify-pin` for deterministic verification tests
+
+## Backend Framework
+
+The backend is implemented with Next.js App Router Route Handlers in `app/src/app/api`, using Vercel AI SDK (`streamText`) and `@modelcontextprotocol/sdk` for tool execution.
+
+## Frontend
+
+The frontend is a Next.js + React chat UI with modular components (`ChatContainer`, `MessageBubble`, `OrderCard`) and streaming interaction support.
+
+## Deploy locally
+
+Use this flow to run the app on your machine.
 
 ```bash
 cd app
@@ -29,56 +44,67 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Required environment variables
+## Test locally
 
-Set in `app/.env.local` (local) and Vercel Project Settings (production):
-
-```bash
-MCP_SERVER_URL=https://order-mcp-74afyau24q-uc.a.run.app/mcp
-GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
-```
-
-Fallback supported:
+Run deterministic checks locally to validate MCP connectivity and PIN verification paths.
 
 ```bash
-GOOGLE_API_KEY=your_google_key
-```
-
-## API endpoints
-
-- `GET /api/mcp`: MCP connectivity + tool list
-- `POST /api/chat`: streaming chat with dynamic tool calls
-- `POST /api/test/verify-pin`: deterministic verification endpoint for tests
-
-## Smoke tests
-
-From `app/`:
-
-```bash
+cd app
 npm run test:smoke:local
-```
-
-Against Vercel:
-
-```bash
-BASE_URL="https://your-domain.vercel.app" npm run test:smoke:vercel
-```
-
-Post-deploy verification (MCP health + smoke subset + chat stream):
-
-```bash
-npm run --prefix app test:post-deploy:vercel
+npm run test:post-deploy:local
 ```
 
 ## Deploy to Vercel
 
-1. Import this repo in Vercel.
+Deploy as a monorepo subdirectory project so Vercel builds only the Next.js app.
+
+1. Import this repository in Vercel.
 2. Set **Root Directory** to `app`.
-3. Add environment variables listed above.
-4. Deploy and verify:
-   - `/`
-   - `/api/mcp`
-   - `/api/chat`
+3. Configure environment variables in Vercel.
+4. Deploy and verify `/`, `/api/mcp`, and `/api/chat`.
+
+## Test Vercel deployment
+
+Use the public domain checks after each deployment.
+
+```bash
+cd app
+npm run test:smoke:vercel
+npm run test:post-deploy:vercel
+```
+
+## Structured logging
+
+Structured JSON logs are emitted with request IDs and lifecycle events for chat requests and tool calls, enabling easy filtering in Vercel logs or external log pipelines.
+
+## Guardrails used
+
+Security and behavior guardrails are codified in `AGENTS.md` and implemented in the app:
+
+- verification required before sensitive order/customer tools
+- privacy-safe responses (no full address/payment exposure)
+- bounded retry flow for invalid verification attempts
+- graceful timeout/error messaging for MCP failures
+
+## Observability with LangSmith
+
+LangSmith tracing is supported via environment variables and records request-level chain runs, tool activity summaries, and completion metadata.
+
+Recommended variables in `app/.env.local` (and Vercel):
+
+```bash
+MCP_SERVER_URL=https://order-mcp-74afyau24q-uc.a.run.app/mcp
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=meridian-support
+```
+
+Fallback API key is also supported:
+
+```bash
+GOOGLE_API_KEY=your_google_key
+```
 
 ## Screenshots
 
