@@ -1,4 +1,5 @@
 import { createGoogleGenerativeAI, google } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
   convertToModelMessages,
   stepCountIs,
@@ -36,6 +37,8 @@ Operational requirements:
 - If inventory lookup fails or MCP times out, apologize and say:
   "I'm having trouble reaching our inventory database. Please try again in a moment."
 - When a tool returns isError=true, explain the userMessage field to the user and suggest the next action.
+- Present product/order list results as concise Markdown tables when possible.
+- Keep long result sets summarized (top entries + optional note), unless user asks for full output.
 `;
 
 type ChatRequest = {
@@ -55,6 +58,22 @@ function getGoogleModel() {
   });
 
   return provider("gemini-2.5-flash");
+}
+
+function getOpenRouterModel() {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+
+  const openrouter = createOpenAI({
+    apiKey,
+    baseURL: "https://openrouter.ai/api/v1",
+  });
+
+  // OpenRouter is more reliable with Chat Completions format
+  // for the current multi-step tool-calling message shape.
+  return openrouter.chat("google/gemini-3-flash-preview");
 }
 
 export async function POST(request: Request) {
@@ -115,7 +134,7 @@ export async function POST(request: Request) {
         });
 
     const result = streamText({
-      model: getGoogleModel(),
+      model: getOpenRouterModel() ?? getGoogleModel(),
       system: `${SYSTEM_PROMPT}\n${runtimeInstruction}`.trim(),
       messages: modelMessages,
       tools,

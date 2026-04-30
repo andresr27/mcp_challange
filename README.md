@@ -8,7 +8,7 @@ Customer support teams need fast, consistent answers for product discovery, iden
 
 ## Solution
 
-This project delivers a secure chat assistant that discovers MCP tools dynamically, enforces verification-first access for sensitive actions, and streams clear responses to end users.
+This project delivers a secure chat assistant that discovers MCP tools dynamically, enforces verification-first access for sensitive actions, and streams clear responses to end users with Markdown/table-friendly rendering.
 
 ## MCP tools used
 
@@ -26,11 +26,12 @@ Supporting API routes:
 
 ## Backend Framework
 
-The backend is implemented with Next.js App Router Route Handlers in `app/src/app/api`, using Vercel AI SDK (`streamText`) and `@modelcontextprotocol/sdk` for tool execution.
+The backend is implemented with Next.js App Router Route Handlers in `app/src/app/api`, using Vercel AI SDK (`streamText`) and `@modelcontextprotocol/sdk` for tool execution.  
+Default model path is OpenRouter (`google/gemini-3-flash-preview`) with Google provider fallback.
 
 ## Frontend
 
-The frontend is a Next.js + React chat UI with modular components (`ChatContainer`, `MessageBubble`, `OrderCard`) and streaming interaction support.
+The frontend is a Next.js + React chat UI with modular components (`ChatContainer`, `MessageBubble`, `OrderCard`) and streaming interaction support, including Markdown + GFM table rendering.
 
 ## Deploy locally
 
@@ -54,6 +55,8 @@ npm run test:smoke:local
 npm run test:post-deploy:local
 ```
 
+To manually validate Markdown tables in chat, ask for product lists (e.g. "List available computers") and verify formatted table output.
+
 ## Deploy to Vercel
 
 Deploy as a monorepo subdirectory project so Vercel builds only the Next.js app.
@@ -72,6 +75,12 @@ cd app
 npm run test:smoke:vercel
 npm run test:post-deploy:vercel
 ```
+
+`test:post-deploy:vercel` is pinned to `https://support.wido.uy` and includes:
+
+- MCP health check (`/api/mcp`)
+- deterministic verify-pin smoke subset
+- real chat stream check (`/api/chat`)
 
 ## Structured logging
 
@@ -94,15 +103,16 @@ Recommended variables in `app/.env.local` (and Vercel):
 
 ```bash
 MCP_SERVER_URL=https://order-mcp-74afyau24q-uc.a.run.app/mcp
-GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
+OPENROUTER_API_KEY=your_openrouter_key
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=your_langsmith_api_key
 LANGSMITH_PROJECT=meridian-support
 ```
 
-Fallback API key is also supported:
+Fallback provider keys are also supported:
 
 ```bash
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
 GOOGLE_API_KEY=your_google_key
 ```
 

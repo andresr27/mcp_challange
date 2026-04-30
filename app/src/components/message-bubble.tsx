@@ -2,8 +2,9 @@
 
 import type { UIMessage } from "ai";
 import { isToolUIPart } from "ai";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-import { OrderCard } from "@/components/order-card";
 
 type MessageBubbleProps = {
   message: UIMessage;
@@ -32,7 +33,16 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         <div className="space-y-3 whitespace-pre-wrap break-words">
           {message.parts.map((part, index) => {
             if (part.type === "text") {
-              return <p key={`${message.id}-text-${index}`}>{part.text}</p>;
+              return (
+                <div
+                  key={`${message.id}-text-${index}`}
+                  className="prose prose-sm max-w-none dark:prose-invert prose-table:border prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1"
+                >
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {part.text}
+                  </ReactMarkdown>
+                </div>
+              );
             }
 
             if (!isToolUIPart(part)) {
@@ -45,22 +55,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                 : toolNameFromPartType(part.type);
 
             if (part.state === "output-available") {
-              return (
-                <OrderCard
-                  key={`${message.id}-tool-${index}`}
-                  title={toolName}
-                  content={part.output}
-                />
-              );
+              // Tool outputs are consumed by the model and rendered as
+              // assistant markdown text. Avoid duplicating raw JSON in UI.
+              return null;
             }
 
             if (part.state === "output-error") {
               return (
-                <OrderCard
+                <p
                   key={`${message.id}-tool-error-${index}`}
-                  title={`${toolName} error`}
-                  content={part.errorText}
-                />
+                  className="text-xs text-red-600 dark:text-red-400"
+                >
+                  Tool `{toolName}` error: {part.errorText}
+                </p>
               );
             }
 

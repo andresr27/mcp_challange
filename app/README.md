@@ -29,12 +29,19 @@ Create `app/.env.local`:
 
 ```bash
 MCP_SERVER_URL=https://order-mcp-74afyau24q-uc.a.run.app/mcp
-GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
+OPENROUTER_API_KEY=your_openrouter_key
 ```
 
-Alternative key fallback is supported:
+Default chat model is:
 
 ```bash
+openrouter/google/gemini-3-flash-preview
+```
+
+Fallback key path (if OpenRouter key is missing):
+
+```bash
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_key
 GOOGLE_API_KEY=your_google_key
 ```
 

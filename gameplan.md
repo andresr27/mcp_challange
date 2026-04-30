@@ -1,6 +1,6 @@
 **Title:** Meridian Support Chatbot Implementation Strategy  
 **Engineer:** Gemini (AI Collaborator)  
-**Timeline:** 180 Minutes  
+**Timeline:** 240 Minutes  
 
 #### Phase 1: Infrastructure & Discovery (Minutes 0–30)
 
@@ -12,12 +12,13 @@
 
 - **Dynamic Tool Mapping:** Implement the bridge that maps Meridian’s MCP JSON schemas to the Vercel AI SDK `tool` format.
 - **Auth Middleware Logic:** Encode the "Security-First" requirement. The agent must be instructed to never call `list_orders` without a successful `verify_customer_pin` response in the chat history.
-- **Stream Implementation:** Set up `streamText` with Gemini 1.5 Flash for cost-efficiency.
+- **Stream Implementation:** Set up `streamText` with OpenRouter `google/gemini-3-flash-preview` and keep Google provider fallback.
 
 #### Phase 3: The Front-End (Minutes 90–140)
 
 - **Component Architecture:** Create a `ChatContainer`, `MessageBubble` (with distinct User/Bot styles), and `OrderCard` (for rendering tool results like SKUs or Order Status).
 - **Loading States:** Implement optimistic UI updates and "Agent is thinking..." indicators to manage latency during MCP tool execution.
+- **Markdown UX:** Render assistant output as Markdown (including GFM tables) for readable product/order summaries.
 
 #### Phase 4: Production Readiness & Deploy (Minutes 140–180)
 
@@ -27,7 +28,7 @@
 
 #### Phase 5: Reliability, Domain, and Observability (Minutes 180–240)
 
-- **Vercel Smoke Tests:** Run post-deploy smoke tests against the production URL (`/api/mcp` + `/api/test/verify-pin`) and fail rollout if any critical check fails.
+- **Vercel Smoke Tests:** Run post-deploy smoke tests against the production URL (`/api/mcp` + `/api/test/verify-pin` + `/api/chat`) and fail rollout if any critical check fails.
 - **Structured Logging:** Implement JSON structured logs for chat requests, MCP tool calls, verification outcomes, and error categories (with request IDs and timestamps).
 - **Custom Domain Setup:** Configure and validate `support.wido.uy` in Vercel (DNS records, SSL certificate, and production alias verification).
 - **LangSmith Observability:** Add LangSmith tracing for request lifecycle, model calls, tool invocations, and latency/error metrics with environment-based toggles.

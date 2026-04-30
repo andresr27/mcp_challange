@@ -20,6 +20,9 @@
   - `test:smoke:vercel`
 - Added structured JSON logging utility in `app/src/lib/logger.ts`.
 - Added optional LangSmith tracing integration in `app/src/lib/langsmith.ts`.
+- Added post-deploy verification script `app/scripts/post-deploy-checks.mjs`.
+- Added screenshot placeholders in `images/` and embedded them in root documentation.
+- Added Markdown + GFM table rendering support in chat UI via `react-markdown` and `remark-gfm`.
 
 ### Changed
 
@@ -35,12 +38,17 @@
   - `VERCEL_URL`-aware smoke test usage
 - Updated chat orchestration to emit request/tool lifecycle logs with request IDs.
 - Updated smoke tests to auto-derive deployment URL from `VERCEL_URL`.
+- Updated chat model path to OpenRouter `google/gemini-3-flash-preview` with Google provider fallback.
+- Updated `test:post-deploy:vercel` to explicitly target `https://support.wido.uy`.
+- Updated root docs (`README.md`, `AGENTS.md`, `gameplan.md`) to reflect Phase 5 completion and current model/formatting behavior.
 
 ### Fixed
 
 - Resolved AI SDK and schema typing issues for dynamic tools in production builds.
 - Updated model configuration to a supported Gemini model for current provider behavior.
 - Fixed Vercel deployment guidance for monorepo root-directory setup (`app`).
+- Fixed OpenRouter compatibility issue by moving from Responses API usage to Chat Completions mode for tool-calling flows.
+- Reduced false "Something went wrong" outcomes after successful tool output by stabilizing provider configuration.
 
 ### Next Steps
 
