@@ -41,3 +41,11 @@
 - Resolved AI SDK and schema typing issues for dynamic tools in production builds.
 - Updated model configuration to a supported Gemini model for current provider behavior.
 - Fixed Vercel deployment guidance for monorepo root-directory setup (`app`).
+
+### Next Steps
+
+- Add CI workflow to run `npm run --prefix app test:post-deploy` after production deployments.
+- Promote screenshot placeholders to versioned release assets and document update cadence.
+- Expand observability with dashboard-level alerts for MCP timeout spikes and verification failure rate.
+- Add negative automated tests for invalid PIN, missing product SKU, and insufficient inventory paths.
+- Add retention/redaction policy for structured logs to protect sensitive operational metadata.

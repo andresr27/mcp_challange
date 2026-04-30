@@ -167,6 +167,12 @@ Vercel (explicit URL):
 BASE_URL="https://your-production-domain.vercel.app" npm run test:post-deploy:vercel
 ```
 
+Current default for `test:post-deploy:vercel` is pinned to:
+
+```bash
+https://support.wido.uy
+```
+
 Vercel CI (auto via `VERCEL_URL`):
 
 ```bash

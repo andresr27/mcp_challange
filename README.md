@@ -17,6 +17,7 @@ All planned phases are implemented in `app/`:
 - **Phase 2:** Dynamic MCP tool mapping + auth-first tool gating
 - **Phase 3:** Chat UI (`ChatContainer`, `MessageBubble`, `OrderCard`)
 - **Phase 4:** Error hardening, deployment docs, and deterministic smoke tests
+- **Phase 5:** Post-deploy checks, structured logging, custom domain runbook, and LangSmith observability
 
 ## Run locally
 
@@ -66,7 +67,7 @@ BASE_URL="https://your-domain.vercel.app" npm run test:smoke:vercel
 Post-deploy verification (MCP health + smoke subset + chat stream):
 
 ```bash
-BASE_URL="https://your-domain.vercel.app" npm run --prefix app test:post-deploy
+npm run --prefix app test:post-deploy:vercel
 ```
 
 ## Deploy to Vercel
@@ -83,12 +84,12 @@ BASE_URL="https://your-domain.vercel.app" npm run --prefix app test:post-deploy
 
 ### Smoke test evidence
 
-![Smoke tests](images/tests-smoke-placeholder.svg)
+![Smoke tests](images/tests-smoke-placeholder.png)
 
 ### Vercel production UI
 
-![Vercel UI](images/ui-vercel-placeholder.svg)
+![Vercel UI](images/ui-vercel-placeholder.png)
 
 ### LangSmith observability
 
-![LangSmith observability](images/langsmith-observability-placeholder.svg)
+![LangSmith observability](images/ui-langsmith-placeholder.png)
