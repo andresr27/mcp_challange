@@ -1,6 +1,8 @@
 # Meridian Electronics MCP Chatbot
 
-Production-ready support chatbot for Meridian Electronics, built with Next.js + AI SDK and powered by `order-mcp`.
+"Production-ready" support chatbot for Meridian Electronics, built with Next.js + AI SDK and powered by `order-mcp`.
+
+Live at [support.wido.uy](https://support.wido.uy)
 
 ## Problem
 
